@@ -1,8 +1,9 @@
-from string_similarity import NormalizedLevenshteinSimilarity
+from string_similarity import NormalizedLevenshteinSimilarity, UnigramTransformerSimilarity
 
 
 def main():
-    string_similarities = [NormalizedLevenshteinSimilarity()]
+    string_similarities = [NormalizedLevenshteinSimilarity(),
+                           UnigramTransformerSimilarity()]
 
     with open('data/examples.tsv', 'r') as f:
         for line in f.readlines():

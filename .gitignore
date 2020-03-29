@@ -2,3 +2,4 @@
 /data/company_aliases.tsv
 /data/dataset.tsv
 /update_data.sh
+/update_models.sh

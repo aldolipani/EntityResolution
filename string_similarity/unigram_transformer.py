@@ -25,15 +25,15 @@ class Model(nn.Module):
     def __init__(self,
                  num_embeddings,
                  embedding_dim,
-                 nhead=8, num_layers=2, dim_feedforward=1024, max_len=100):
+                 nhead=8, num_layers=3, dim_feedforward=1024, max_len=80):
         super().__init__()
         self.embedding_dim = embedding_dim
         self.embed = nn.Embedding(num_embeddings, embedding_dim)
         self.pos_encoder = PositionalEncoding(embedding_dim, max_len)
         self.transformer_encoder = nn.TransformerEncoder(
             nn.TransformerEncoderLayer(embedding_dim, nhead, dim_feedforward, activation='gelu'), num_layers)
-        self.fc1 = nn.Linear(embedding_dim * max_len, embedding_dim >> 2)
-        self.fc2 = nn.Linear(embedding_dim >> 2, 2)
+        self.fc1 = nn.Linear(embedding_dim * max_len, (int)(embedding_dim / 2))
+        self.fc2 = nn.Linear((int)(embedding_dim / 2), 2)
         self.criterion = nn.CrossEntropyLoss()
 
     def forward(self, x, y=None):
@@ -44,7 +44,7 @@ class Model(nn.Module):
         y_pred = self.fc1(y_pred)
         y_pred = self.fc2(y_pred)
         if y is None:
-            y_pred = nn.functional.softmax(y_pred, dim=0)[:, 1]
+            y_pred = nn.functional.softmax(y_pred, dim=1)[:, 1]
             return y_pred
         else:
             return self.criterion(y_pred, y), y_pred
@@ -52,22 +52,26 @@ class Model(nn.Module):
 
 class UnigramTransformerSimilarity(EntitySimilarity):
 
-    def __init__(self, max_len=100):
+    def __init__(self, path='./models/', max_len=80):
         super(UnigramTransformerSimilarity, self).__init__("Unigram Transformer")
         self.max_len = max_len
+        self.path = path
         self.character_to_idx = None
         self.model = None
+        self.load()
 
     def load(self):
-        with open("./models/character_to_idx.dat", "rb") as f:
+        with open(self.path + 'character_to_idx.dat', 'rb') as f:
             self.character_to_idx = pickle.load(f)
         self.model = Model(len(self.character_to_idx), 128, max_len=self.max_len)
-        self.model.load_state_dict(torch.load('./models/unigram_transformer.model'))
+        self.model.load_state_dict(torch.load(self.path + 'unigram_transformer.dat'))
         self.model.eval()
 
     def compute(self, entity1: str, entity2: str):
-
-        pass
+        input = self.preprocess(entity1, entity2)
+        input = torch.tensor(input, dtype=torch.long)
+        input = input.reshape((1, -1))
+        return self.model(input)[0].item()
 
     def to_idxs(self, str_entity: str):
         res = []
@@ -77,10 +81,6 @@ class UnigramTransformerSimilarity(EntitySimilarity):
             else:
                 res.append(self.character_to_idx['[unk]'])
         return res
-
-    def add_padding(x):
-
-        return x
 
     def preprocess(self, str_entity1, str_entity2):
         # from chars to ids
@@ -94,3 +94,13 @@ class UnigramTransformerSimilarity(EntitySimilarity):
         else:
             x += [self.character_to_idx['[pad]']] * (self.max_len - len(x))
         return x
+
+
+if __name__ == '__main__':
+    uts = UnigramTransformerSimilarity(path='../models/', max_len=80)
+    uts.load()
+    print('01/01/2019', '01/01/2019', uts.compute('01/01/2019', '01/01/2019'))
+    print('01/01/2019', '01/01|2019', uts.compute('01/01/2019', '01/01|2019'))
+    print('01/01/2019', '02/01/2019', uts.compute('01/01/2019', '02/01/2019'))
+    print('01/01/2019', '01/01|2029', uts.compute('01/01/2019', '01/01|2029'))
+    print('01/01/2019', '020 323 032', uts.compute('01/01/2019', '020 323 032'))
