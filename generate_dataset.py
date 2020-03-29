@@ -5,10 +5,10 @@ from corruptor_models import OCRCorrupter
 from entity_generator import DateGenerator
 
 
-def corrupt(entity, corruptor_models, p=0.1):
-    n = np.random.binomial(len(corruptor_models), p)
+def corrupt(entity, corrupter_models, p=0.1):
+    n = np.random.binomial(len(corrupter_models), p)
     for i in range(n):
-        entity = corruptor_models[i].corrupt(entity)
+        entity = corrupter_models[i].corrupt(entity)
     return entity
 
 
