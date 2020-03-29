@@ -71,9 +71,10 @@ class CompanyGenerator:
             with open('../data/company_aliases.tsv', 'r') as f:
                 for line in f.readlines():
                     items = line.strip().split('\t')
-                    company = items[0]
-                    company_label = items[1]
-                    company_aliases[company] = (company_label, items[2:])
+                    if len(items) >= 2:
+                        company = items[0]
+                        company_label = items[1]
+                        company_aliases[company] = (company_label, items[2:])
         are_they_all = True
         for company in self.companies:
             if company not in company_aliases:
