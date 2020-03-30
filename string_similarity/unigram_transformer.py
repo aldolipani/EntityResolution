@@ -9,7 +9,7 @@ from string_similarity import EntitySimilarity
 
 class PositionalEncoding:
 
-    def __init__(self, embedding_dim, max_len=80):
+    def __init__(self, embedding_dim, max_len=70):
         self.pe = torch.zeros(max_len, embedding_dim)
         position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
         div_term = torch.exp(torch.arange(0, embedding_dim, 2).float() * (-math.log(10000.0) / embedding_dim))
@@ -25,7 +25,7 @@ class Model(nn.Module):
     def __init__(self,
                  num_embeddings,
                  embedding_dim,
-                 nhead=8, num_layers=2, dim_feedforward=1024, max_len=80):
+                 nhead=12, num_layers=3, dim_feedforward=1024, max_len=70):
         super().__init__()
         self.embedding_dim = embedding_dim
         self.embed = nn.Embedding(num_embeddings, embedding_dim)
@@ -52,7 +52,7 @@ class Model(nn.Module):
 
 class UnigramTransformerSimilarity(EntitySimilarity):
 
-    def __init__(self, path='./models/', max_len=80):
+    def __init__(self, path='./models/', max_len=70):
         super(UnigramTransformerSimilarity, self).__init__("Unigram Transformer")
         self.max_len = max_len
         self.path = path
@@ -63,7 +63,7 @@ class UnigramTransformerSimilarity(EntitySimilarity):
     def load(self):
         with open(self.path + 'character_to_idx.dat', 'rb') as f:
             self.character_to_idx = pickle.load(f)
-        self.model = Model(len(self.character_to_idx), 128, max_len=self.max_len)
+        self.model = Model(len(self.character_to_idx), 192, max_len=self.max_len)
         self.model.load_state_dict(torch.load(self.path + 'unigram_transformer.dat'))
         self.model.eval()
 
@@ -97,7 +97,7 @@ class UnigramTransformerSimilarity(EntitySimilarity):
 
 
 if __name__ == '__main__':
-    uts = UnigramTransformerSimilarity(path='../models/', max_len=80)
+    uts = UnigramTransformerSimilarity(path='../models/', max_len=70)
     uts.load()
     print('01/01/2019', '01/01/2019', uts.compute('01/01/2019', '01/01/2019'))
     print('01/01/2019', '01/01|2019', uts.compute('01/01/2019', '01/01|2019'))
