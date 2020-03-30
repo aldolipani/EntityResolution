@@ -9,7 +9,7 @@ from string_similarity import EntitySimilarity
 
 class PositionalEncoding:
 
-    def __init__(self, embedding_dim, max_len=100):
+    def __init__(self, embedding_dim, max_len=80):
         self.pe = torch.zeros(max_len, embedding_dim)
         position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
         div_term = torch.exp(torch.arange(0, embedding_dim, 2).float() * (-math.log(10000.0) / embedding_dim))
@@ -25,7 +25,7 @@ class Model(nn.Module):
     def __init__(self,
                  num_embeddings,
                  embedding_dim,
-                 nhead=8, num_layers=3, dim_feedforward=1024, max_len=80):
+                 nhead=8, num_layers=2, dim_feedforward=1024, max_len=80):
         super().__init__()
         self.embedding_dim = embedding_dim
         self.embed = nn.Embedding(num_embeddings, embedding_dim)
